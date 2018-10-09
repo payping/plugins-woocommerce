@@ -91,4 +91,9 @@
  <a href="https://payping.ir">«پشتیبانی آنلاین سایت پی پینگ»</a>
  تماس بگیرید
 </p>
+   <p dir="rtl">
+توسعه دهنده :  
+ <a href="http://erfanebrahimi.ir">عرفان ابراهیمی</a> - developed by :
+  <a href="http://erfanebrahimi.ir">Erfan Ebrahimi</a>
+</p>
 <div>
