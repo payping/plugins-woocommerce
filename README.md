@@ -39,7 +39,7 @@
  دریافت کنید 
 </p>
 <p dir="rtl">
-<a href="https://github.com/payping/plugins-woocommerce/releases" title="دانلود اخرین نسخه افزونه"><img width="70%" src="https://raw.githubusercontent.com/payping/plugins-woocommerce/master/help/download-plugin.png" /></a>
+<a href="https://github.com/yeganehha/payping-woocommerce/releases" title="دانلود اخرین نسخه افزونه"><img width="70%" src="http://ytest.ir/paypingDone/help/wocommerce1/download.PNG" /></a>
 </p>
 <p dir="rtl">
 پس از دریافت فایل افزونه ، از طریق بارگذاری در صفحه اقدام به نصب (5) کنید 
