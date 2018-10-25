@@ -25,7 +25,7 @@
  ابتدا از نصب <b>نبودن</b> افزونه «افزونه پرداخت پی‌پینگ برای ووکامرس» اطمینان حاصل کنید، برای این کار از پنل مدیریتی وردپرس ، قسمت «افزونه ها» طبق تصویر زیر اگر گزینه ای با عنوان «افزونه پرداخت پی‌پینگ برای ووکامرس» وجود داشت ابتدا غیر فعال سپس پاک کنید
 </p>
 <p dir="rtl">
-<img width="80%" src="https://raw.githubusercontent.com/yeganehha/payping-insatll-help-asset-/master/plugins-EDD/delete.PNG"/>
+<img width="80%" src="https://raw.githubusercontent.com/yeganehha/payping-insatll-help-asset-/master/plugins-woocommerce/delete.PNG"/>
 </p>
 <p dir="rtl">
 در گام بعدی از منو مدیریتی ، افزونه ها ، زیر گزینه افزودن (3) و در پنل سمت چپ دکمه بارگذاری افزونه (4) را بزنید
@@ -39,7 +39,7 @@
  دریافت کنید 
 </p>
 <p dir="rtl">
-<a href="https://github.com/yeganehha/payping-woocommerce/releases" title="دانلود اخرین نسخه افزونه"><img width="70%" src="https://raw.githubusercontent.com/yeganehha/payping-insatll-help-asset-/master/plugins-EDD/download.PNG" /></a>
+<a href="https://github.com/yeganehha/payping-woocommerce/releases" title="دانلود اخرین نسخه افزونه"><img width="70%" src="https://raw.githubusercontent.com/yeganehha/payping-insatll-help-asset-/master/plugins-woocommerce/download.PNG" /></a>
 </p>
 <p dir="rtl">
 پس از دریافت فایل افزونه ، از طریق بارگذاری در صفحه اقدام به نصب (5) کنید 
