@@ -16,22 +16,22 @@
 بروزرسانی «WordPress»،«ووکامرس» و «ووکامرس فارسی» به جدیدترین نگارش 
  </p>
  <p dir="rtl">
-<img width="50%" src="https://raw.githubusercontent.com/payping/plugins-woocommerce/master/help/wordpress-update.png"/>
+<img width="50%" src="https://raw.githubusercontent.com/yeganehha/payping-insatll-help-asset-/master/plugins-EDD/wordpress-update.png"/>
 </p>
  <p dir="rtl">
-<img width="95%" src="https://raw.githubusercontent.com/payping/plugins-woocommerce/master/help/woocomerce-update.png"/>
+<img width="95%" src="https://raw.githubusercontent.com/payping/plugins-woocommerce-VIP/master/help/woocomerce-update.png"/>
 </p>
 <p dir="rtl">
  ابتدا از نصب <b>نبودن</b> افزونه «افزونه پرداخت پی‌پینگ برای ووکامرس» اطمینان حاصل کنید، برای این کار از پنل مدیریتی وردپرس ، قسمت «افزونه ها» طبق تصویر زیر اگر گزینه ای با عنوان «افزونه پرداخت پی‌پینگ برای ووکامرس» وجود داشت ابتدا غیر فعال سپس پاک کنید
 </p>
 <p dir="rtl">
-<img width="80%" src="http://ytest.ir/paypingDone/help/wocommerce/delete.PNG"/>
+<img width="80%" src="https://raw.githubusercontent.com/yeganehha/payping-insatll-help-asset-/master/plugins-EDD/delete.PNG"/>
 </p>
 <p dir="rtl">
 در گام بعدی از منو مدیریتی ، افزونه ها ، زیر گزینه افزودن (3) و در پنل سمت چپ دکمه بارگذاری افزونه (4) را بزنید
 </p>
 <p dir="rtl">
-<img width="80%" src="https://raw.githubusercontent.com/payping/plugins-woocommerce/master/help/add-plugin.png"/>
+<img width="80%" src="https://raw.githubusercontent.com/payping/plugins-woocommerce-VIP/master/help/add-plugin.png"/>
 </p>
 <p dir="rtl">
 سپس اخرین نسخه از افزونه پی پینگ ویژه ووکامرس را 
@@ -39,19 +39,19 @@
  دریافت کنید 
 </p>
 <p dir="rtl">
-<a href="https://github.com/yeganehha/payping-woocommerce/releases" title="دانلود اخرین نسخه افزونه"><img width="70%" src="http://ytest.ir/paypingDone/help/wocommerce1/download.PNG" /></a>
+<a href="https://github.com/yeganehha/payping-woocommerce/releases" title="دانلود اخرین نسخه افزونه"><img width="70%" src="https://raw.githubusercontent.com/yeganehha/payping-insatll-help-asset-/master/plugins-EDD/download.PNG" /></a>
 </p>
 <p dir="rtl">
 پس از دریافت فایل افزونه ، از طریق بارگذاری در صفحه اقدام به نصب (5) کنید 
 </p>
 <p dir="rtl">
-<img width="80%" src="https://raw.githubusercontent.com/payping/plugins-woocommerce/master/help/browse-plugin.png"/>
+<img width="80%" src="https://raw.githubusercontent.com/payping/plugins-woocommerce-VIP/master/help/browse-plugin.png"/>
 </p>
 <p dir="rtl">
 پس از نصب ، نیاز به فعال سازی افزونه (6) می باشد
 </p>
 <p dir="rtl">
-<img width="70%" src="https://raw.githubusercontent.com/payping/plugins-woocommerce/master/help/active-plugin.png" />
+<img width="70%" src="https://raw.githubusercontent.com/payping/plugins-woocommerce-VIP/master/help/active-plugin.png" />
 </p>
 <h4 dir="rtl">دریافت توکن:</h4>
 <p dir="rtl">
@@ -66,25 +66,25 @@
 به این بخش وارد شوید.
  </p>
  <p dir="rtl">
-<img width="60%" src="http://ytest.ir/paypingDone/help/wocommerce/select%20configuration.PNG" />
+<img width="60%" src="https://raw.githubusercontent.com/yeganehha/payping-insatll-help-asset-/master/plugins-EDD/select%20configuration.PNG" />
 </p>
  <p dir="rtl">
 در صفحه پیکربندی ووکامرس گزینه checkout و یا تسویه حساب (8) را کلیک کنید.
  </p>
   <p dir="rtl">
-<img width="60%" src="http://ytest.ir/paypingDone/help/wocommerce/select%20checkout.PNG" />
+<img width="60%" src="https://raw.githubusercontent.com/yeganehha/payping-insatll-help-asset-/master/plugins-EDD/select%20checkout.PNG" />
 </p>
   <p dir="rtl">
 در صفحه جدید، از لینک های بالای صفحه گزینه پرداخت از طریق درگاه پی‌پینگ (9) را انتخاب کنید.
  </p>
   <p dir="rtl">
-<img width="60%" src="http://ytest.ir/paypingDone/help/wocommerce/select%20payping.PNG?s" />
+<img width="60%" src="https://raw.githubusercontent.com/yeganehha/payping-insatll-help-asset-/master/plugins-EDD/select%20payping.PNG?s" />
 </p>
    <p dir="rtl">
 صفحه پیکربندی دراه پی‌پینگ برای شما باز می شود. در صورتی که چک باکس فعاسازی (10) در حالت فعال ( چک شده ) باشد، درگاه پی‌پینگ برای شما فعال می باشد و برای غیر فعالسازی درگاه فقط کافیست روی همین چک باکس کلیک کنید. در کادر (11) عنوان درگاه که به کاربر نمایش داده می شود را می توانید ویرایش کنید. در بعضی از قالب های ووکامرس امکان نوشتن توضیحاتی برای درگاه پرداخت وجود دارد که شما می توانید از طریق کادر (12) توضحیات خود را لحاظ نمایید. در کادر (13) توکن دریافتی از سایت پی‌پینگ را وارد نمایید. همچنین از طریق کادر (14) و (15) می توانید توضیحات نمایش داده شده به کاربر پس از پرداخت را ویرایش نمایید. پس از انجام تغییرات مد نظر، دکمه ذخیره تغییرات (16) کلیک کنید. 
  </p>
 <p dir="rtl">
-<img width="100%" src="http://ytest.ir/paypingDone/help/wocommerce/config%20payping.PNG" />
+<img width="100%" src="https://raw.githubusercontent.com/yeganehha/payping-insatll-help-asset-/master/plugins-EDD/config%20payping.PNG" />
 </p>
 <p dir="rtl">
 در صورت داشتن هرگونه سوال و نیاز به راهنمایی با 
