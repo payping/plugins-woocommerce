@@ -66,25 +66,25 @@
 به این بخش وارد شوید.
  </p>
  <p dir="rtl">
-<img width="60%" src="https://raw.githubusercontent.com/yeganehha/payping-insatll-help-asset-/master/plugins-EDD/select%20configuration.PNG" />
+<img width="60%" src="https://raw.githubusercontent.com/yeganehha/payping-insatll-help-asset-/master/plugins-woocommerce/select%20configuration.PNG" />
 </p>
  <p dir="rtl">
 در صفحه پیکربندی ووکامرس گزینه checkout و یا تسویه حساب (8) را کلیک کنید.
  </p>
   <p dir="rtl">
-<img width="60%" src="https://raw.githubusercontent.com/yeganehha/payping-insatll-help-asset-/master/plugins-EDD/select%20checkout.PNG" />
+<img width="60%" src="https://raw.githubusercontent.com/yeganehha/payping-insatll-help-asset-/master/plugins-woocommerce/select%20checkout.PNG" />
 </p>
   <p dir="rtl">
 در صفحه جدید، از لینک های بالای صفحه گزینه پرداخت از طریق درگاه پی‌پینگ (9) را انتخاب کنید.
  </p>
   <p dir="rtl">
-<img width="60%" src="https://raw.githubusercontent.com/yeganehha/payping-insatll-help-asset-/master/plugins-EDD/select%20payping.PNG?s" />
+<img width="60%" src="https://raw.githubusercontent.com/yeganehha/payping-insatll-help-asset-/master/plugins-woocommerce/select%20payping.PNG?s" />
 </p>
    <p dir="rtl">
 صفحه پیکربندی دراه پی‌پینگ برای شما باز می شود. در صورتی که چک باکس فعاسازی (10) در حالت فعال ( چک شده ) باشد، درگاه پی‌پینگ برای شما فعال می باشد و برای غیر فعالسازی درگاه فقط کافیست روی همین چک باکس کلیک کنید. در کادر (11) عنوان درگاه که به کاربر نمایش داده می شود را می توانید ویرایش کنید. در بعضی از قالب های ووکامرس امکان نوشتن توضیحاتی برای درگاه پرداخت وجود دارد که شما می توانید از طریق کادر (12) توضحیات خود را لحاظ نمایید. در کادر (13) توکن دریافتی از سایت پی‌پینگ را وارد نمایید. همچنین از طریق کادر (14) و (15) می توانید توضیحات نمایش داده شده به کاربر پس از پرداخت را ویرایش نمایید. پس از انجام تغییرات مد نظر، دکمه ذخیره تغییرات (16) کلیک کنید. 
  </p>
 <p dir="rtl">
-<img width="100%" src="https://raw.githubusercontent.com/yeganehha/payping-insatll-help-asset-/master/plugins-EDD/config%20payping.PNG" />
+<img width="100%" src="https://raw.githubusercontent.com/yeganehha/payping-insatll-help-asset-/master/plugins-woocommerce/config%20payping.PNG" />
 </p>
 <p dir="rtl">
 در صورت داشتن هرگونه سوال و نیاز به راهنمایی با 
