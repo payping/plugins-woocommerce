@@ -1,13 +1,13 @@
 ﻿=== Woocommerce PayPing Gateway ===
-Contributors: mashhadcode
+Contributors: mahdisarani, payping
 Tags: woocommerce, payment, payping, افزونه پرداخت, ووکامرس, ووکامرس فارسی, درگاه پرداخت, gateway, iran, persian, پی پینگ, pay ping
-Donate link: https://mashhadcode.com
+Donate link: https://payping.ir
 Requires at least: 4.0.0
-Tested up to: 5.2.0
-Requires PHP: 5.6.3
-Stable tag: 1.5.1
-License: GPLv2 or later
-License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Tested up to: 5.7
+Requires PHP: 7.0.0
+Stable tag: 4.0.0
+License: GPLv3 or later
+License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
 افزونه درگاه پرداخت پی‌پینگ برای ووکامرس
 
@@ -21,34 +21,27 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 == Changelog ==
 
-= 1.0.1 =
-Convert CURL To wp_remote_post
-Create Directory assets
-release error reports
-= 1.0.0 =
-Initial release
+== 4.0.0 ==
+تغییرات در بخش نمایش جزئیات پرداخت.
+هماهنگی بیشتر با افزونه پنل پی‌پینگ و بخش مغایرت‌گیری.
+تغییر در ساختار اکشن‌های افزونه.
 
-== 1.0.1 ==
-تغییر تابع ارسال پارامترها به درگاه پی‌پینگ و تغییر تابع احراز پرداخت .
-قرارگیری شماره خطا در خطاهای ارسالی برای خطایابی سریع.
+== 3.0.0 ==
+تغییر در پیام‌ خطاهای سفارش.
+ثبت کد پرداخت برای هر سفارش و استفاده مجدد از آن برای تلاش‌های بعدی.
+بهبود عملکرد کدهای واحد ارزی و نمایش خطاها.
 
-== 1.5.1 ==
-change notification error
+== 2.8.0 ==
+برطرف شدن تداخل همسان‌سازی در برخی افزونه‌ها.
 
-== 1.5.1 ==
-change notification error
-change notification Cancell Payment
-Enable Debug Mode For Better Develop
-Create Log Error In Plugin Directory
-change notification error
-change notification Cancell Payment
-Enable Debug Mode For Better Develop
-Create Log Error In Plugin Directory
+== 2.7.0 ==
+اضافه شدن شرط بیشتر‌ برای دریافت کد فاکتور در تایید پرداخت.
+
+== 2.6.2 ==
+رفع خطاهای Notice در صفحه تسویه حساب.
+استفاده از لوگوی کوچک‌تر برای نمایش درست لوگو در صفحه تسویه حساب.
 
 == Upgrade Notice ==
-بروزرسانی و حل مشکل عدم نمایش پیغام درست در هنگام انصراف کاربر از پرداخت.
-اضافه شدن حالت اشکال‌زدایی.
-حل برخی موارد جزئی
-
+حل مشکل اندازه لوگو در صفحه تسویه حساب
 
 
