@@ -234,7 +234,7 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 			/* Call Function Show Debug In Console */
 			WC_GPP_Debug_Log($this->Debug_Mode, $response, "Pay"); 
 
-			$XPP_ID = $response["headers"]["x-paypingrequest-id"];
+//			$XPP_ID = $response["headers"]["x-paypingrequest-id"];
 				if( is_wp_error($response) ){
 					$Message = $response->get_error_message();
 				}else{	
@@ -247,11 +247,11 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 							wp_redirect(sprintf('%s/pay/gotoipg/%s', $this->serverUrl, $code_pay["code"]));
 							exit;
 						} else {
-							$Message = ' تراکنش ناموفق بود- کد خطا : '.$XPP_ID;
+							$Message = ' تراکنش ناموفق بود- کد خطا : ';
 							$Fault = $Message;
 						}
 					}else{
-						$Message = wp_remote_retrieve_body( $response ).'<br /> کد خطا: '.$XPP_ID;
+						$Message = wp_remote_retrieve_body( $response );
 					}
 				}
 
@@ -345,7 +345,6 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 				/* Call Function Show Debug In Console */
 				WC_GPP_Debug_Log($this->Debug_Mode, $response, "Verify");
 
-				$XPP_ID = $response["headers"]["x-paypingrequest-id"];
 				if( is_wp_error($response) ){
 					$Status = 'failed';
 					$Fault = $response->get_error_message();
@@ -358,7 +357,7 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 							$Status = 'completed';
 						}else{
 							$Status = 'failed';
-							$Message = 'متاسفانه سامانه قادر به دریافت کد پیگیری نمی باشد! نتیجه درخواست : ' . $body .'<br /> شماره خطا: '.$XPP_ID;
+							$Message = 'متاسفانه سامانه قادر به دریافت کد پیگیری نمی باشد! نتیجه درخواست : ' . $body;
 							$Fault = $Message;
 						}
 					}elseif( $code == 400){
@@ -367,16 +366,16 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 							$Status = 'completed';
 						}elseif( array_key_exists( '1', $rbody) ){
 							$Status = 'failed';
-							$Message = "کاربر در صفحه بانک از پرداخت انصراف داده است.<br>کد پرداخت: $paypingpayCode <br> شماره خطا: $XPP_ID";
+							$Message = "کاربر در صفحه بانک از پرداخت انصراف داده است.<br>کد پرداخت: $paypingpayCode";
 							$Fault = 'تراكنش توسط شما لغو شد.';
 						}else{
 							$Status = 'failed';
-							$Message = $txtmsg."<br>کد پرداخت: $paypingpayCode <br> شماره خطا: $XPP_ID";
+							$Message = $txtmsg."<br>کد پرداخت: $paypingpayCode";
 							$Fault = 'خطایی رخ داده است، با مدیریت سایت تماس بگیرید.';
 						}
 					}else{
 						$Status = 'failed';
-						$Message = $txtmsg.'<br> شماره خطا: '.$XPP_ID;
+						$Message = $txtmsg;
 						$Fault = $Message;
 					}
 				}
