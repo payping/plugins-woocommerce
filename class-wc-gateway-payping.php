@@ -232,9 +232,9 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 			$response = wp_remote_post($api_url, $api_args);
 
 			/* Call Function Show Debug In Console */
-			WC_GPP_Debug_Log($this->Debug_Mode, $response, "Pay"); 
+			payping_woo_debug_log($this->Debug_Mode, $response, "Pay"); 
 
-//			$XPP_ID = $response["headers"]["x-paypingrequest-id"];
+			$ERR_ID = wp_remote_retrieve_header($response, 'x-paypingrequest-id');
 				if( is_wp_error($response) ){
 					$Message = $response->get_error_message();
 				}else{	
@@ -247,11 +247,11 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 							wp_redirect(sprintf('%s/pay/gotoipg/%s', $this->serverUrl, $code_pay["code"]));
 							exit;
 						} else {
-							$Message = ' تراکنش ناموفق بود- کد خطا : ';
+							$Message = ' تراکنش ناموفق بود- کد خطا : '.$ERR_ID;
 							$Fault = $Message;
 						}
 					}else{
-						$Message = wp_remote_retrieve_body( $response );
+						$Message = wp_remote_retrieve_body( $response ).'<br /> کد خطا: '.$ERR_ID;
 					}
 				}
 
@@ -274,28 +274,23 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 
 		public function Return_from_payping_Gateway(){
 			global $woocommerce;
-			if( isset( $_GET['wc_order'] ) ){
-				$order_id = esc_sql( $_GET['wc_order'] );
-			}elseif( isset( $_POST['wc_order'] ) ){
-				$order_id = esc_sql( $_POST['wc_order'] );
-			}elseif( isset( $_GET['clientrefid'] ) ){
-				$order_id = esc_sql( $_GET['clientrefid'] );
-			}elseif( isset( $_POST['clientrefid'] ) ){
-				$order_id = esc_sql( $_POST['clientrefid'] );
+			if( isset( $_REQUEST['wc_order'] ) ){
+				$order_id = sanitize_text_field( $_REQUEST['wc_order'] );
 			}else{
 				$order_id = $woocommerce->session->order_id_payping;
 				unset( $woocommerce->session->order_id_payping );
 			}
+
 			// Get refid
-			if( isset( $_POST['refid'] ) ){
-				$refid = esc_sql( $_POST['refid'] );
-			}elseif( $_GET['refid'] ){
-				$refid = esc_sql( $_GET['refid'] );
+			if( isset( $_REQUEST['refid'] ) ){
+				$refid = sanitize_text_field( $_REQUEST['refid'] );
 			}else{
 				$refid = null;
 			}
 			
 			$order_id = apply_filters('WC_payping_return_order_id', $order_id);
+			
+			
 			if( isset( $order_id ) ){
 				if( $refid != null && $refid > 1000 ){
 					update_post_meta($order_id, 'woo_payping_refid', $refid );
@@ -320,6 +315,7 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 					// Add Filter for ANother Developer
 					$refid = apply_filters('WC_payping_return_refid', $refid);
 					$Transaction_ID = $refid;
+					
 					//Set Data 
 					$data = array('refId' => $refid, 'amount' => $Amount);
 					$args = array(
@@ -340,11 +336,12 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 				//response
 				$response = wp_remote_post($verify_api_url, $args);
 				$body = wp_remote_retrieve_body( $response );
-
-
+				$rbody = json_decode( $body, true );
+					
 				/* Call Function Show Debug In Console */
-				WC_GPP_Debug_Log($this->Debug_Mode, $response, "Verify");
-
+				payping_woo_debug_log($this->Debug_Mode, $response, "Verify");
+				
+				$ERR_ID = wp_remote_retrieve_header($response, 'x-paypingrequest-id');
 				if( is_wp_error($response) ){
 					$Status = 'failed';
 					$Fault = $response->get_error_message();
@@ -352,30 +349,34 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 				}else{
 					$code = wp_remote_retrieve_response_code( $response );
 					$txtmsg = $this->status_message( $code );
+					$cardNumber = $rbody['cardNumber'];
+					update_post_meta($order_id, 'payping_payment_card_number', $cardNumber);
+					
 					if( $code === 200 ){
 						if( isset( $refid ) and $refid != '' ){
 							$Status = 'completed';
+							$txtmsg = $txtmsg.'<br>کد پرداخت: '.$paypingpayCode.'<br>شماره کارت: <b dir="ltr">'.$cardNumber.'</b>';
+							$Fault = $txtmsg;
 						}else{
 							$Status = 'failed';
-							$Message = 'متاسفانه سامانه قادر به دریافت کد پیگیری نمی باشد! نتیجه درخواست : ' . $body;
+							$Message = 'متاسفانه سامانه قادر به دریافت کد پیگیری نمی باشد! نتیجه درخواست : ' . $body .'<br /> شماره خطا: '.$ERR_ID;
 							$Fault = $Message;
 						}
 					}elseif( $code == 400){
-						$rbody = json_decode( $body, true );
 						if( array_key_exists('15', $rbody) ){
 							$Status = 'completed';
 						}elseif( array_key_exists( '1', $rbody) ){
 							$Status = 'failed';
-							$Message = "کاربر در صفحه بانک از پرداخت انصراف داده است.<br>کد پرداخت: $paypingpayCode";
+							$Message = "کاربر در صفحه بانک از پرداخت انصراف داده است.<br>کد پرداخت: $paypingpayCode <br> شماره خطا: $ERR_ID";
 							$Fault = 'تراكنش توسط شما لغو شد.';
 						}else{
 							$Status = 'failed';
-							$Message = $txtmsg."<br>کد پرداخت: $paypingpayCode";
+							$Message = $txtmsg."<br>کد پرداخت: $paypingpayCode <br> شماره خطا: $ERR_ID";
 							$Fault = 'خطایی رخ داده است، با مدیریت سایت تماس بگیرید.';
 						}
 					}else{
 						$Status = 'failed';
-						$Message = $txtmsg;
+						$Message = $txtmsg.'<br> شماره خطا: '.$ERR_ID;
 						$Fault = $Message;
 					}
 				}
@@ -385,7 +386,7 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 						if( $Status == 'completed' ){
 							$order->payment_complete($Transaction_ID);
 							$woocommerce->cart->empty_cart();
-							$Note = sprintf( __('%s .<br/> شماره سفارش: %s', 'woocommerce'), $txtmsg, $Transaction_ID) ;
+							$Note = sprintf( __('%s <br> شماره سفارش: %s <br>', 'woocommerce'), $txtmsg, $Transaction_ID) ;
 							$Note = apply_filters('WC_payping_Return_from_Gateway_Success_Note', $Note, $order_id, $Transaction_ID );
 							if( $Note ){ $order->add_order_note($Note, 1); }
 							$Notice = wpautop(wptexturize($this->success_massage));
@@ -397,7 +398,7 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 							exit;
 						}else{
 							$tr_id = ($Transaction_ID && $Transaction_ID != 0) ? ('<br/>کد پیگیری : ' . $Transaction_ID) : '';
-							$Note = sprintf(__('خطا در هنگام بازگشت از بانک : %s', 'woocommerce'), $Message, $tr_id);
+							$Note = sprintf(__('خطا در هنگام تایید پرداخت : %s', 'woocommerce'), $Message, $tr_id);
 							$Note = apply_filters('WC_payping_Return_from_Gateway_Failed_Note', $Note, $order_id, $Transaction_ID, $Fault);
 							if($Note){ $order->add_order_note($Note, 1); }
 							$Notice = wpautop(wptexturize($Note));
@@ -414,7 +415,7 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 					}
 				}else{
 					$Transaction_ID = get_post_meta($order_id, '_transaction_id', true);
-					$Notice = wpautop(wptexturize($this->success_massage.' شناسه خطای پی پینگ:'.$XPP_ID));
+					$Notice = wpautop(wptexturize($this->success_massage.' شناسه خطای پی پینگ:'.$ERR_ID));
 					$Notice = str_replace("{transaction_id}", $Transaction_ID, $Notice);
 					$Notice = apply_filters('WC_payping_Return_from_Gateway_ReSuccess_Notice', $Notice, $order_id, $Transaction_ID);
 					if($Notice){ wc_add_notice($Notice, 'success'); }
@@ -424,7 +425,7 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 				}
 			}else{
 				$Fault = __('شماره سفارش وجود ندارد .', 'woocommerce');
-				$Notice = wpautop(wptexturize($this->failed_massage.' شناسه خطای پی پینگ:'.$XPP_ID));
+				$Notice = wpautop(wptexturize($this->failed_massage.' شناسه خطای پی پینگ:'.$ERR_ID));
 				$Notice = str_replace("{fault}", $Fault, $Notice);
 				$Notice = apply_filters('WC_payping_Return_from_Gateway_No_Order_ID_Notice', $Notice, $order_id, $Fault);
 				if($Notice){ wc_add_notice($Notice, 'error'); }

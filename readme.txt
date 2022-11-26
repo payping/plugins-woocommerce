@@ -1,11 +1,11 @@
-﻿=== Woocommerce PayPing Gateway ===
+﻿=== Gateway for PayPing on WooCommerce ===
 Contributors: mahdisarani, payping
 Tags: woocommerce, payment, payping, افزونه پرداخت, ووکامرس, ووکامرس فارسی, درگاه پرداخت, gateway, iran, persian, پی پینگ, pay ping
 Donate link: https://payping.ir
 Requires at least: 4.0.0
-Tested up to: 5.7
+Tested up to: 6.1.1
 Requires PHP: 7.0.0
-Stable tag: 4.0.0
+Stable tag: 4.2.1
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -15,11 +15,20 @@ License URI: http://www.gnu.org/licenses/gpl-3.0.html
 با استفاده از این افزونه فروشگاه خود را به دروازه آنلاین پرداخت بانکی متصل کنید.
 
 == Installation ==
-1. پوشه \'woo-payping-gateway\' را در مسیر \'/wp-content/plugins/\' آپلود کنید
+1. پوشه \'woo-gateway-payping\' را در مسیر \'/wp-content/plugins/\' آپلود کنید
 2. افزونه را از طریق منوی \'افزونه ها\' در وردپرس فعال کنید
 3. تنظیمات افزونه را می توانید از طریق قسمت تنظیمات ووکامرس / پیکربندی/ درگاه های پرداخت انجام دهید
 
 == Changelog ==
+
+== 4.2.1 ==
+بهبود عملکرد تایید پرداخت و نمایش خطاها.
+نمایش شماره کارت پرداخت کننده در صورت ارسال از سمت بانک.
+
+== 4.1.1 ==
+بهبود عملکرد در صورت خطای اتصال به سرور پی‌پینگ.
+بهبود عملکرد دریافت شماره سفارش در تایید پرداخت.
+نمایش کد پرداخت پی‌پینگ در سفارشات.
 
 == 4.0.0 ==
 تغییرات در بخش نمایش جزئیات پرداخت.
@@ -43,5 +52,3 @@ License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
 == Upgrade Notice ==
 حل مشکل اندازه لوگو در صفحه تسویه حساب
-
-
