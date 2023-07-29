@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Gateway for PayPing on WooCommerce
-Version: 4.2.1
+Version: 4.3.0
 Description:  افزونه درگاه پرداخت پی‌پینگ برای ووکامرس
 Plugin URI: https://www.payping.ir/
 Author: Mahdi Sarani
@@ -9,17 +9,11 @@ Author URI: https://mahdisarani.ir
 */
 if(!defined('ABSPATH')) exit;
 
-define('WC_GPPDIR', plugin_dir_path( __FILE__ ));
+define('WOO_GPPDIR', plugin_dir_path( __FILE__ ));
+define('WOO_GPPDU', plugin_dir_url( __FILE__ ));
+
 function load_payping_woo_gateway(){
-	/* Show Debug In Console */
-	function payping_woo_debug_log($Debug_Mode='no', $object=null, $label=null ){
-		if($Debug_Mode === 'yes'){
-			$object = $object; 
-			$message = json_encode( $object, JSON_UNESCAPED_UNICODE);
-			$label = "Debug".($label ? " ($label): " : ': '); 
-			echo "<script>console.log(\"$label\", $message);</script>";
-		}
-	}
+
 	/* Add Payping Gateway Method */
 	add_filter('woocommerce_payment_gateways', 'Woocommerce_Add_payping_Gateway');
 	function Woocommerce_Add_payping_Gateway($methods){
@@ -54,6 +48,6 @@ function load_payping_woo_gateway(){
 		}
 		return $currency_symbol;
 	}
-	require_once( WC_GPPDIR . 'class-wc-gateway-payping.php' );
+	require_once( WOO_GPPDIR . 'class-wc-gateway-payping.php' );
 }
 add_action('plugins_loaded', 'load_payping_woo_gateway', 0);
