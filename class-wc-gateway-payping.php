@@ -1,26 +1,28 @@
 <?php
-if(!defined('ABSPATH')){ exit; }
+if(!defined('ABSPATH'))exit;
 
 if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 	class WC_payping extends WC_Payment_Gateway{
-
+	    
+        private $baseurl = 'https://api.payping.ir/v2';
+        private $paypingToken;
+        private $success_massage;
+        private $failed_massage;
+        private $Debug_Mode;
+        
 		public function __construct(){
-
+		    
 			$this->id = 'WC_payping';
 			$this->method_title = __('پرداخت از طریق درگاه پی‌پینگ', 'woocommerce');
 			$this->method_description = __('تنظیمات درگاه پرداخت پی‌پینگ برای افزونه فروشگاه ساز ووکامرس', 'woocommerce');
-			$this->icon = apply_filters('WC_payping_logo', WP_PLUGIN_URL . "/" . plugin_basename(dirname(__FILE__)) . '/assets/images/logo.png');
+			$this->icon = apply_filters('woo_payping_logo', WOO_GPPDU.'/assets/images/logo.png');
 			$this->has_fields = false;
-
 			$this->init_form_fields();
 			$this->init_settings();
 
-			$this->ioserver = $this->settings['ioserver'];
-			if( $this->ioserver == 'yes'){
-				$this->serverUrl  = 'https://api.payping.io/v2';
-			}else{
-				$this->serverUrl  = 'https://api.payping.ir/v2';
-			}
+			$checkserver = $this->settings['ioserver'];
+			if( $checkserver == 'yes')$this->baseurl  = 'https://api.payping.io/v2';
+			
 			$this->title = $this->settings['title'];
 			$this->description = $this->settings['description'];
 
@@ -111,19 +113,6 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 						'type' => 'textarea',
 						'description' => __('متن پیامی که میخواهید بعد از پرداخت ناموفق به کاربر نمایش دهید را وارد نمایید . همچنین می توانید از شورت کد {fault} برای نمایش دلیل خطای رخ داده استفاده نمایید .', 'woocommerce'),
 						'default' => __('پرداخت شما ناموفق بوده است . لطفا مجددا تلاش نمایید یا در صورت بروز اشکال با مدیر سایت تماس بگیرید .', 'woocommerce'),
-					),
-					'Debug_Confing' => array(
-						'title' => __('تنظیمات اشکال زدایی <span style="font-size:12px;color:red;">این بخش برای توسعه دهندگان است.(در صورت نداشتن اطلاعات کافی آن را رها کنید).</span>', 'woocommerce'),
-						'type' => 'title',
-						'description' => '',
-					),
-					'Debug_Mode' => array(
-						'title' => __('فعالسازی حالت اشکال زدایی<br/><span style="font-size:11px;color:red;">از فعالسازی این گزینه در حالت عادی خودداری نمایید.</span>', 'woocommerce'),
-						'type' => 'checkbox',
-						'label' => __('حالت اشکال زدایی', 'woocommerce'),
-						'description' => __('برای فعالسازی حالت اشکال زدایی تیک بزنید.', 'woocommerce'),
-						'default' => 'no',
-						'desc_tip' => true
 					)
 				)
 			);
@@ -145,15 +134,16 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 		public function Send_to_payping_Gateway($order_id){
 			$paypingpayCode = get_post_meta($order_id, '_payping_payCode', true);
 			if( $paypingpayCode ){
-				wp_redirect( sprintf('%s/pay/gotoipg/%s', $this->serverUrl, $paypingpayCode )) ;
+				wp_redirect( sprintf('%s/pay/gotoipg/%s', $this->baseurl, $paypingpayCode )) ;
 				exit;
 			}
 			global $woocommerce;
 			$woocommerce->session->order_id_payping = $order_id;
+			
 			$order = new WC_Order($order_id);
 			$currency = $order->get_currency();
 			$currency = apply_filters('WC_payping_Currency', $currency, $order_id);
-
+			
 			$form = '<form action="" method="POST" class="payping-checkout-form" id="payping-checkout-form">
 					<input type="submit" name="payping_submit" class="button alt" id="payping-payment-button" value="' . __('پرداخت', 'woocommerce') . '"/>
 					<a class="button cancel" href="' . wc_get_checkout_url() . '">' . __('بازگشت', 'woocommerce') . '</a>
@@ -225,55 +215,49 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 				'cookies' => array()
 			);
 
-			$api_url  = apply_filters( 'WC_payping_Gateway_Payment_api_url', $this->serverUrl . '/pay', $order_id );
+			$api_url  = apply_filters( 'WC_payping_Gateway_Payment_api_url', $this->baseurl . '/pay', $order_id );
 
 			$api_args = apply_filters( 'WC_payping_Gateway_Payment_api_args', $args, $order_id );
 
 			$response = wp_remote_post($api_url, $api_args);
 
-			/* Call Function Show Debug In Console */
-			payping_woo_debug_log($this->Debug_Mode, $response, "Pay"); 
-
 			$ERR_ID = wp_remote_retrieve_header($response, 'x-paypingrequest-id');
-				if( is_wp_error($response) ){
-					$Message = $response->get_error_message();
-				}else{	
-					$code = wp_remote_retrieve_response_code( $response );
-					if( $code === 200){
-						if (isset($response["body"]) and $response["body"] != '') {
-							$code_pay = wp_remote_retrieve_body($response);
-							$code_pay =  json_decode($code_pay, true);
-							update_post_meta($order_id, '_payping_payCode', $code_pay["code"] );
-							wp_redirect(sprintf('%s/pay/gotoipg/%s', $this->serverUrl, $code_pay["code"]));
-							exit;
-						} else {
-							$Message = ' تراکنش ناموفق بود- کد خطا : '.$ERR_ID;
-							$Fault = $Message;
-						}
-					}else{
-						$Message = wp_remote_retrieve_body( $response ).'<br /> کد خطا: '.$ERR_ID;
+			if( is_wp_error($response) ){
+				$Message = $response->get_error_message();
+			}else{	
+				$code = wp_remote_retrieve_response_code( $response );
+				if( $code === 200){
+					if (isset($response["body"]) and $response["body"] != '') {
+						$code_pay = wp_remote_retrieve_body($response);
+						$code_pay =  json_decode($code_pay, true);
+						update_post_meta($order_id, '_payping_payCode', $code_pay["code"] );
+						$Note = 'ساخت موفق پرداخت، کد پرداخت: '.$code_pay["code"];
+						$order->add_order_note($Note, 1, false);
+						wp_redirect(sprintf('%s/pay/gotoipg/%s', $this->baseurl, $code_pay["code"]));
+						exit;
+					} else {
+						$Message = ' تراکنش ناموفق بود- کد خطا : '.$ERR_ID;
+						$Fault = $Message;
 					}
+				}else{
+					$Message = wp_remote_retrieve_body( $response ).'<br /> کد خطا: '.$ERR_ID;
+					$Fault = $Message;
 				}
+			}
 
 			if(!empty($Message) && $Message){
-
 				$Note = sprintf(__('خطا در هنگام ارسال به بانک : %s', 'woocommerce'), $Message);
-				$Fault = sprintf(__('خطا در هنگام ارسال به بانک : %s', 'woocommerce'), $Message);
-				$Note = apply_filters('WC_payping_Send_to_Gateway_Failed_Note', $Note, $order_id, $Fault);
-				$order->add_order_note($Note);
-
-				$Fault = sprintf(__('در هنگام اتصال به بانک خطای زیر رخ داده است : <br/>%s', 'woocommerce'), $Message);
-				$Notice = sprintf(__('در هنگام اتصال به بانک خطای زیر رخ داده است : <br/>%s', 'woocommerce'), $Message);
-				$Notice = apply_filters('WC_payping_Send_to_Gateway_Failed_Notice', $Notice, $order_id, $Fault);
-				if ($Notice)
-					wc_add_notice($Notice, 'error');
-				$Fault = $Notice;
-				do_action('WC_payping_Send_to_Gateway_Failed', $order_id, $Fault);
+				$Fault = sprintf(__('خطا در هنگام ارسال به بانک : %s', 'woocommerce'), $Fault);
+				$Note = apply_filters('woo_payping_Send_to_Gateway_Failed_Note', $Note, $order_id, $Fault);
+				wc_add_notice($Fault, 'error');
+				$order->add_order_note($Note, 0, false);
+				do_action('woo_payping_Send_to_Gateway_Failed', $order_id, $Fault);
 			}
 		}
 
 		public function Return_from_payping_Gateway(){
 			global $woocommerce;
+			
 			if( isset( $_REQUEST['wc_order'] ) ){
 				$order_id = sanitize_text_field( $_REQUEST['wc_order'] );
 			}else{
@@ -295,8 +279,7 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 				if( $refid != null && $refid > 1000 ){
 					update_post_meta($order_id, 'woo_payping_refid', $refid );
 				}
-				//Get PayCode
-				$paypingpayCode = get_post_meta($order_id, '_payping_payCode', true);
+
 				// Get Order id
 				$order = new WC_Order($order_id);
 				// Get Currency Order
@@ -304,9 +287,9 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 				// Add Filter For Another Developer
 				$currency = apply_filters('WC_payping_Currency', $currency, $order_id);
 
-				if( $order->status != 'completed' ){
+				if( $order->get_status() != 'completed' ){
 					// Get Amount
-					$Amount = intval($order->order_total);
+					$Amount = intval($order->get_total());
 					/* add filter for other developer */
 					$Amount = apply_filters('woocommerce_order_amount_total_IRANIAN_gateways_before_check_currency', $Amount, $currency);
 					/* check currency and set amount */
@@ -331,15 +314,14 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 						),
 					 'cookies' => array()
 					);
+					
 				// Add Filter for use Another developer
-				$verify_api_url = apply_filters( 'WC_payping_Gateway_Payment_verify_api_url', $this->serverUrl . '/pay/verify', $order_id );
+				$verify_api_url = apply_filters( 'WC_payping_Gateway_Payment_verify_api_url', $this->baseurl . '/pay/verify', $order_id );
 				//response
 				$response = wp_remote_post($verify_api_url, $args);
+				
 				$body = wp_remote_retrieve_body( $response );
 				$rbody = json_decode( $body, true );
-					
-				/* Call Function Show Debug In Console */
-				payping_woo_debug_log($this->Debug_Mode, $response, "Verify");
 				
 				$ERR_ID = wp_remote_retrieve_header($response, 'x-paypingrequest-id');
 				if( is_wp_error($response) ){
@@ -349,68 +331,76 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 				}else{
 					$code = wp_remote_retrieve_response_code( $response );
 					$txtmsg = $this->status_message( $code );
-					$cardNumber = $rbody['cardNumber'];
-					update_post_meta($order_id, 'payping_payment_card_number', $cardNumber);
+					
+					//check cardNumber payer
+					if(isset($rbody['cardNumber'])){
+						$cardNumber = $rbody['cardNumber'];
+						update_post_meta($order_id, 'payping_payment_card_number', $cardNumber);
+					}else{
+						$cardNumber = '-';
+					}
 					
 					if( $code === 200 ){
 						if( isset( $refid ) and $refid != '' ){
 							$Status = 'completed';
-							$txtmsg = $txtmsg.'<br>کد پرداخت: '.$paypingpayCode.'<br>شماره کارت: <b dir="ltr">'.$cardNumber.'</b>';
-							$Fault = $txtmsg;
+							$Message = $txtmsg.'<br>شماره کارت: <b dir="ltr">'.$cardNumber.'</b>';
 						}else{
 							$Status = 'failed';
 							$Message = 'متاسفانه سامانه قادر به دریافت کد پیگیری نمی باشد! نتیجه درخواست : ' . $body .'<br /> شماره خطا: '.$ERR_ID;
-							$Fault = $Message;
+							$Fault = 'خطای دریافت کد پیگیری!';
 						}
 					}elseif( $code == 400){
 						if( array_key_exists('15', $rbody) ){
 							$Status = 'completed';
+							$Message = $txtmsg.'<br>شماره کارت: <b dir="ltr">'.$cardNumber.'</b>';
 						}elseif( array_key_exists( '1', $rbody) ){
 							$Status = 'failed';
-							$Message = "کاربر در صفحه بانک از پرداخت انصراف داده است.<br>کد پرداخت: $paypingpayCode <br> شماره خطا: $ERR_ID";
+							$Message = "کاربر در صفحه بانک از پرداخت انصراف داده است.<br> شماره خطا: $ERR_ID";
 							$Fault = 'تراكنش توسط شما لغو شد.';
 						}else{
 							$Status = 'failed';
-							$Message = $txtmsg."<br>کد پرداخت: $paypingpayCode <br> شماره خطا: $ERR_ID";
+							$Message = $txtmsg."<br> شماره خطا: $ERR_ID";
 							$Fault = 'خطایی رخ داده است، با مدیریت سایت تماس بگیرید.';
 						}
 					}else{
 						$Status = 'failed';
 						$Message = $txtmsg.'<br> شماره خطا: '.$ERR_ID;
-						$Fault = $Message;
+						$Fault = 'خطای نامشخص در تایید پرداخت!';
 					}
 				}
-
+				
 					if( isset( $Transaction_ID ) && $Transaction_ID != 0 ){
 						update_post_meta($order_id, '_transaction_id', $Transaction_ID );
 						if( $Status == 'completed' ){
-							$order->payment_complete($Transaction_ID);
-							$woocommerce->cart->empty_cart();
-							$Note = sprintf( __('%s <br> شماره سفارش: %s <br>', 'woocommerce'), $txtmsg, $Transaction_ID) ;
+							$Note = sprintf( __('%s <br> شماره سفارش: %s <br>', 'woocommerce'), $Message, $Transaction_ID) ;
 							$Note = apply_filters('WC_payping_Return_from_Gateway_Success_Note', $Note, $order_id, $Transaction_ID );
-							if( $Note ){ $order->add_order_note($Note, 1); }
 							$Notice = wpautop(wptexturize($this->success_massage));
 							$Notice = str_replace("{transaction_id}", $Transaction_ID, $Notice);
 							$Notice = apply_filters('WC_payping_Return_from_Gateway_Success_Notice', $Notice, $order_id, $Transaction_ID);
-							if( $Notice ){ wc_add_notice($Notice, 'success'); }
 							do_action('WC_payping_Return_from_Gateway_Success', $order_id, $Transaction_ID, $response);
+							wc_add_notice($Message, 'error');
+							$order->add_order_note( $Message, 0, false);
+							$woocommerce->cart->empty_cart();
+							$order->payment_complete($Transaction_ID);
 							wp_redirect(add_query_arg('wc_status', 'success', $this->get_return_url($order)));
 							exit;
 						}else{
-							$tr_id = ($Transaction_ID && $Transaction_ID != 0) ? ('<br/>کد پیگیری : ' . $Transaction_ID) : '';
-							$Note = sprintf(__('خطا در هنگام تایید پرداخت : %s', 'woocommerce'), $Message, $tr_id);
+							$tr_id = ($Transaction_ID && $Transaction_ID != 0) ? ('<br/>کد پیگیری: ' . $Transaction_ID) : '';
+							$Note = sprintf(__('خطا در هنگام تایید پرداخت: %s', 'woocommerce'), $Message, $tr_id);
 							$Note = apply_filters('WC_payping_Return_from_Gateway_Failed_Note', $Note, $order_id, $Transaction_ID, $Fault);
-							if($Note){ $order->add_order_note($Note, 1); }
 							$Notice = wpautop(wptexturize($Note));
 							$Notice = str_replace("{transaction_id}", $Transaction_ID, $Notice);
 							$Notice = str_replace("{fault}", $Message, $Notice);
 							$Notice = apply_filters('WC_payping_Return_from_Gateway_Failed_Notice', $Notice, $order_id, $Transaction_ID, $Fault);
-							if($Notice){ wc_add_notice($Notice, 'error'); }
 							do_action('WC_payping_Return_from_Gateway_Failed', $order_id, $Transaction_ID, $Fault);
-							wp_redirect($woocommerce->cart->get_checkout_url());
+							wc_add_notice($Fault, 'error');
+							$order->add_order_note( $Notice, 0, false);
+							wp_redirect(wc_get_checkout_url());
 							exit;
 						}
 					}else{
+						wc_add_notice($Fault, 'error');
+						$order->add_order_note( $Notice, 0, false);
 						update_post_meta($order_id, '_transaction_id', $Transaction_ID );
 					}
 				}else{
@@ -418,8 +408,9 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 					$Notice = wpautop(wptexturize($this->success_massage.' شناسه خطای پی پینگ:'.$ERR_ID));
 					$Notice = str_replace("{transaction_id}", $Transaction_ID, $Notice);
 					$Notice = apply_filters('WC_payping_Return_from_Gateway_ReSuccess_Notice', $Notice, $order_id, $Transaction_ID);
-					if($Notice){ wc_add_notice($Notice, 'success'); }
 					do_action('WC_payping_Return_from_Gateway_ReSuccess', $order_id, $Transaction_ID);
+					wc_add_notice($Fault, 'error');
+					$order->add_order_note( $Notice, 0, false);
 					wp_redirect(add_query_arg('wc_status', 'success', $this->get_return_url($order)));
 					exit;
 				}
@@ -428,9 +419,10 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 				$Notice = wpautop(wptexturize($this->failed_massage.' شناسه خطای پی پینگ:'.$ERR_ID));
 				$Notice = str_replace("{fault}", $Fault, $Notice);
 				$Notice = apply_filters('WC_payping_Return_from_Gateway_No_Order_ID_Notice', $Notice, $order_id, $Fault);
-				if($Notice){ wc_add_notice($Notice, 'error'); }
+				wc_add_notice($Fault, 'error');
+				$order->add_order_note( $Notice, 0, false);
 				do_action('WC_payping_Return_from_Gateway_No_Order_ID', $order_id, $Transaction_ID, $Fault);
-				wp_redirect($woocommerce->cart->get_checkout_url());
+				wp_redirect(wc_get_checkout_url());
 				exit;
 			}
 		}
