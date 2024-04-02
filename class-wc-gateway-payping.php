@@ -8,7 +8,6 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
         private $paypingToken;
         private $success_massage;
         private $failed_massage;
-        private $Debug_Mode;
         
 		public function __construct(){
 		    
@@ -31,8 +30,6 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 			$this->success_massage = $this->settings['success_massage'];
 			$this->failed_massage = $this->settings['failed_massage'];
 
-			$this->Debug_Mode = $this->settings['Debug_Mode'];
-
 			if (version_compare(WOOCOMMERCE_VERSION, '2.0.0', '>='))
 				add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
 			else
@@ -40,7 +37,6 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 
 			add_action('woocommerce_receipt_' . $this->id . '', array($this, 'Send_to_payping_Gateway'));
 			add_action('woocommerce_api_' . strtolower(get_class($this)) . '', array($this, 'Return_from_payping_Gateway'));
-
 
 		}
 
@@ -165,7 +161,6 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('WC_payping') ){
 			$Amount = apply_filters('woocommerce_order_amount_total_payping_gateway', $Amount, $currency);
 
 			$CallbackUrl = add_query_arg('wc_order', $order_id, WC()->api_request_url('WC_payping'));
-
 			$products = array();
 			$order_items = $order->get_items();
 			foreach ((array)$order_items as $product) {

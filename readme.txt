@@ -3,9 +3,9 @@ Contributors: mahdisarani, payping
 Tags: woocommerce, payment, payping, افزونه پرداخت, ووکامرس, ووکامرس فارسی, درگاه پرداخت, gateway, iran, persian, پی پینگ, pay ping
 Donate link: https://payping.ir
 Requires at least: 4.0.0
-Tested up to: 6.1.1
+Tested up to: 6.4.3
 Requires PHP: 7.0.0
-Stable tag: 4.2.1
+Stable tag: 4.4.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -20,6 +20,15 @@ License URI: http://www.gnu.org/licenses/gpl-3.0.html
 3. تنظیمات افزونه را می توانید از طریق قسمت تنظیمات ووکامرس / پیکربندی/ درگاه های پرداخت انجام دهید
 
 == Changelog ==
+
+== 4.4.0 ==
+سازگاری با نسخه جدید ووکامرس و ویرایشگر بلوک.
+
+== 4.3.0 ==
+بهبود عملکرد نمایش خطا ها در صفحه تسویه حساب.
+حذف حالت اشکال زدایی(تغییر فرایند اشکال زدایی).
+سازگاری با php 8.x
+سازگاری با نسخه جدید وکامرس و وردپرس.
 
 == 4.2.1 ==
 بهبود عملکرد تایید پرداخت و نمایش خطاها.
