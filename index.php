@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Gateway for PayPing on WooCommerce
-Version: 4.4.0
+Version: 4.6.0
 Description:  افزونه درگاه پرداخت پی‌پینگ برای ووکامرس
 Plugin URI: https://www.payping.ir/
 Author: Mahdi Sarani

@@ -5,7 +5,7 @@ Donate link: https://payping.ir
 Requires at least: 4.0.0
 Tested up to: 6.4.3
 Requires PHP: 7.0.0
-Stable tag: 4.4.0
+Stable tag: 4.6.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -20,6 +20,15 @@ License URI: http://www.gnu.org/licenses/gpl-3.0.html
 3. تنظیمات افزونه را می توانید از طریق قسمت تنظیمات ووکامرس / پیکربندی/ درگاه های پرداخت انجام دهید
 
 == Changelog ==
+
+== 4.6.0 ==
+بهبود عملکرد افزونه و رفع مشکلات گزارش شده
+
+== 4.5.1 ==
+تغییر در ثبت توضیحات سفارش
+
+== 4.5.0 ==
+بروزرسانی وب سرویس پی پینگ به نسخه جدید.
 
 == 4.4.0 ==
 سازگاری با نسخه جدید ووکامرس و ویرایشگر بلوک.
