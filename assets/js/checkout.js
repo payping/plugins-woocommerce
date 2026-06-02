@@ -1,17 +1,57 @@
-const payping_settings = window.wc.wcSettings.getSetting( 'payping_gateway_data', {} );
-const payping_label = window.wp.htmlEntities.decodeEntities( payping_settings.title ) || window.wp.i18n.__( 'پرداخت از طریق پی‌پینگ', 'woocommerce' );
-const payping_Content = () => {
-    return window.wp.htmlEntities.decodeEntities( payping_settings.description || '' );
-};
-const Payping_Block_Gateway = {
-    name: 'WC_payping',
-    label: payping_label,
-    content: Object( window.wp.element.createElement )( payping_Content, null ),
-    edit: Object( window.wp.element.createElement )( payping_Content, null ),
+/**
+ * Register PayPing Regular payment method for WooCommerce Blocks (Gutenberg).
+ * Wrapped in IIFE to avoid conflicts with other payment methods.
+ */
+(function() {
+  // Destructure required utilities from global WC Blocks Registry and WordPress libraries
+  const { registerPaymentMethod } = wc.wcBlocksRegistry;
+  const { createElement } = wp.element;
+  const { __ } = wp.i18n;
+
+  /**
+   * React component for payment method content
+   * @returns {JSX.Element} Payment method UI with description
+   */
+  const PaypingRegularContent = () => {
+    return createElement(
+      'div',
+      { 
+        className: 'payping-regular-content',
+        'data-testid': 'payping-regular-container'
+      },
+      // Payment Description
+      createElement(
+        'div',
+        { className: 'payping-regular-description' },
+        paypingRegularSettings.description
+      )
+    );
+  };
+
+  // Register payment method with WooCommerce Blocks
+  registerPaymentMethod({
+    name: 'WC_payping', // Unique payment method ID
+    label: createElement(
+      'div',
+      { className: 'payping-regular-label-wrapper' },
+      // Logo in payment method list
+      createElement('img', {
+        src: paypingRegularSettings.icon,
+        alt: paypingRegularSettings.title,
+        style: { // Inline styles
+          display: 'inline-block',
+          margin: '0 0 0 10px',
+          verticalAlign: 'middle',
+          maxWidth: '100px'
+        },
+        className: 'payping-regular-icon'
+      }),
+      paypingRegularSettings.title
+    ),
+    ariaLabel: paypingRegularSettings.ariaLabel,
+    content: createElement(PaypingRegularContent),
+    edit: null,
     canMakePayment: () => true,
-    ariaLabel: payping_label,
-    supports: {
-        features: payping_settings.supports,
-    },
-};
-window.wc.wcBlocksRegistry.registerPaymentMethod( Payping_Block_Gateway );
+    paymentMethodId: 'WC_payping'
+  });
+})();

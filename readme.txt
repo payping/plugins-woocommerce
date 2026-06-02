@@ -1,25 +1,38 @@
-﻿=== Gateway for PayPing on WooCommerce ===
-Contributors: mahdisarani, payping
-Tags: woocommerce, payment, payping, افزونه پرداخت, ووکامرس, ووکامرس فارسی, درگاه پرداخت, gateway, iran, persian, پی پینگ, pay ping
-Donate link: https://payping.ir
-Requires at least: 4.0.0
-Tested up to: 6.4.3
+﻿=== PayPing Gateway For Woocommerce ===
+Contributors: payping, mahdisarani, hadihosseini
+Tags: woocommerce, payment, payping, درگاه پرداخت, gateway
+Requires at least: 6.2
+Tested up to: 6.8
 Requires PHP: 7.0.0
-Stable tag: 4.6.0
+Stable tag: 4.6.2
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
 افزونه درگاه پرداخت پی‌پینگ برای ووکامرس
 
 == Description ==
-با استفاده از این افزونه فروشگاه خود را به دروازه آنلاین پرداخت بانکی متصل کنید.
+با استفاده از این افزونه فروشگاه خود را به درگاه آنلاین پرداخت بانکی متصل کنید.
 
 == Installation ==
 1. پوشه \'woo-gateway-payping\' را در مسیر \'/wp-content/plugins/\' آپلود کنید
 2. افزونه را از طریق منوی \'افزونه ها\' در وردپرس فعال کنید
 3. تنظیمات افزونه را می توانید از طریق قسمت تنظیمات ووکامرس / پیکربندی/ درگاه های پرداخت انجام دهید
 
+
+== Third-Party Services ==
+This plugin leverages the following third-party services:
+
+1. https://api.payping.ir: This plugin adds online payment functionality to the Woocommerce plugin, allowing us to process payments and check payment statuses through https://api.payping.ir.
+
+
+== Privacy Policy ==
+This plugin follows strict privacy guidelines. When using the api.payping.ir service, user data is securely transmitted and stored following industry best practices.
+
+
 == Changelog ==
+
+== 4.6.1 ==
+بهبود عملکرد افزونه
 
 == 4.6.0 ==
 بهبود عملکرد افزونه و رفع مشکلات گزارش شده

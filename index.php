@@ -1,11 +1,16 @@
 <?php
 /*
-Plugin Name: Gateway for PayPing on WooCommerce
-Version: 4.6.0
-Description:  افزونه درگاه پرداخت پی‌پینگ برای ووکامرس
-Plugin URI: https://www.payping.ir/
-Author: Mahdi Sarani
-Author URI: https://mahdisarani.ir
+* Plugin Name: PayPing Gateway For Woocommerce
+* Version: 4.6.2
+* Description:  افزونه درگاه پرداخت پی‌پینگ برای ووکامرس
+* Plugin URI: https://github.com/payping/plugins-woocommerce/
+* Requires at least: 6.2
+* Author: PayPing PHP Team
+* Author URI: https://payping.io/about/
+* Requires Plugins: woocommerce
+* Text Domain: woo-payping-gateway
+* License:  GPL v3 or later
+* License URI: https://www.gnu.org/licenses/gpl-3.0.html
 */
 if(!defined('ABSPATH')) exit;
 
@@ -23,10 +28,10 @@ function load_payping_woo_gateway(){
 	/* Add Iranian Currencies Woocommerce */
 	add_filter('woocommerce_currencies', 'add_IR_currency_For_PayPing');
 	function add_IR_currency_For_PayPing($currencies){
-		$currencies['IRR'] = __('ریال', 'woocommerce');
-		$currencies['IRT'] = __('تومان', 'woocommerce');
-		$currencies['IRHR'] = __('هزار ریال', 'woocommerce');
-		$currencies['IRHT'] = __('هزار تومان', 'woocommerce');
+		$currencies['IRR'] = __('ریال', 'woo-payping-gateway');
+		$currencies['IRT'] = __('تومان', 'woo-payping-gateway');
+		$currencies['IRHR'] = __('هزار ریال', 'woo-payping-gateway');
+		$currencies['IRHT'] = __('هزار تومان', 'woo-payping-gateway');
 		return $currencies;
 	}
 	/* Add Iranian Currencies Symbols Woocommerce */
