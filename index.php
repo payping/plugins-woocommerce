@@ -1,7 +1,7 @@
 <?php
 /*
 * Plugin Name: PayPing Gateway For Woocommerce
-* Version: 4.6.2
+* Version: 4.6.4
 * Description:  افزونه درگاه پرداخت پی‌پینگ برای ووکامرس
 * Plugin URI: https://github.com/payping/plugins-woocommerce/
 * Requires at least: 6.2
@@ -16,6 +16,7 @@ if(!defined('ABSPATH')) exit;
 
 define('WOO_GPPDIR', plugin_dir_path( __FILE__ ));
 define('WOO_GPPDU', plugin_dir_url( __FILE__ ));
+define('WOO_PAYPING_VERSION', '4.6.4');
 
 function load_payping_woo_gateway(){
 
@@ -54,9 +55,16 @@ function load_payping_woo_gateway(){
 		return $currency_symbol;
 	}
 	require_once( WOO_GPPDIR . 'class-wc-gateway-payping.php' );
-	//require_once( WOO_GPPDIR . 'block-support.php' );
 }
 add_action('plugins_loaded', 'load_payping_woo_gateway', 0);
+
+/**
+ * Load the plugin text domain for translations
+ */
+function load_payping_gateway_textdomain(){
+    load_plugin_textdomain('woo-payping-gateway', false, dirname(plugin_basename(__FILE__)) . '/languages/');
+}
+add_action('init', 'load_payping_gateway_textdomain');
 
 
 /**
@@ -67,6 +75,8 @@ function declare_payping_cart_checkout_blocks_compatibility() {
     if (class_exists('\Automattic\WooCommerce\Utilities\FeaturesUtil')) {
         // Declare compatibility for 'cart_checkout_blocks'
         \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('cart_checkout_blocks', __FILE__, true);
+        // Declare compatibility with High-Performance Order Storage (HPOS)
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('custom_order_tables', __FILE__, true);
     }
 }
 // Hook the custom function to the 'before_woocommerce_init' action

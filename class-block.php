@@ -7,8 +7,8 @@ final class Payping_Gateway_Blocks extends AbstractPaymentMethodType {
     protected $name = 'WC_payping';
 
     public function initialize() {
-        $this->settings = get_option( 'woocommerce_payping_gateway_settings', [] );
         $this->gateway = new WC_payping();
+        $this->settings = get_option( $this->gateway->get_option_key(), [] );
     }
 
     public function is_active() {
@@ -27,11 +27,11 @@ final class Payping_Gateway_Blocks extends AbstractPaymentMethodType {
                 'wp-html-entities',
                 'wp-i18n',
             ],
-            '1.0.1',
+            WOO_PAYPING_VERSION,
             true
         );
         
-        // ⬇️ استفاده از wp_localize_script (دقیقاً مثل الگوی اقساطی)
+        // Use wp_localize_script, same as the installment gateway
         wp_localize_script(
             'payping-gateway-blocks',
             'paypingRegularSettings',
