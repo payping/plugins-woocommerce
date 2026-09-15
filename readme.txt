@@ -4,7 +4,7 @@ Tags: woocommerce, payment, payping, درگاه پرداخت, gateway
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4.0
-Stable tag: 4.6.4
+Stable tag: 4.6.5
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -35,6 +35,7 @@ License URI: http://www.gnu.org/licenses/gpl-3.0.html
 * `WC_payping_Description`، `WC_payping_Mobile`، `WC_payping_Email`، `WC_payping_Paymenter` — اطلاعات پرداخت‌کننده ارسالی به درگاه
 * `woocommerce_order_amount_total_payping_gateway` و `woocommerce_order_amount_total_IRANIAN_gateways_before_check_currency`، `..._after_check_currency`، `..._irt` — تغییر مبلغ نهایی پرداخت
 * `woo_payping_logo` — آدرس لوگوی درگاه
+* `woo_payping_order_panel_rows` — ردیف‌های نمایش داده شده در بخش «داده‌های درگاه پی‌پینگ» در صفحه سفارش
 * `WC_payping_Config` — فیلدهای تنظیمات درگاه
 
 نمونه استفاده:
@@ -90,6 +91,12 @@ This plugin follows strict privacy guidelines. When using the api.payping.ir ser
 
 
 == Changelog ==
+
+= 4.6.5 =
+بهبود نمایش پیام خطاهای درگاه پی‌پینگ و نمایش دلیل خطا به جای خروجی خام
+افزودن بخش اختصاصی «داده‌های درگاه پی‌پینگ» در صفحه سفارش همراه با تایم‌لاین رویدادهای پرداخت
+انتقال اطلاعات پرداخت پی‌پینگ از یادداشت‌های سفارش به بخش اختصاصی درگاه
+نمایش شناسه پیگیری (Trace ID) خطاها برای بررسی آسان‌تر با پشتیبانی پی‌پینگ
 
 = 4.6.4 =
 بهبود فرایند پرداخت و حذف صفحه میانی قبل از هدایت به درگاه
@@ -156,6 +163,9 @@ This plugin follows strict privacy guidelines. When using the api.payping.ir ser
 استفاده از لوگوی کوچک‌تر برای نمایش درست لوگو در صفحه تسویه حساب.
 
 == Upgrade Notice ==
+= 4.6.5 =
+بهبود نمایش خطاها و افزودن بخش اختصاصی پی‌پینگ به صفحه سفارش
+
 = 4.6.4 =
 بهبود فرایند پرداخت و رفع مشکلات گزارش شده
 

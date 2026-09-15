@@ -1,7 +1,7 @@
 <?php
 /*
 * Plugin Name: PayPing Gateway For Woocommerce
-* Version: 4.6.4
+* Version: 4.6.5
 * Description:  افزونه درگاه پرداخت پی‌پینگ برای ووکامرس
 * Plugin URI: https://github.com/payping/plugins-woocommerce/
 * Requires at least: 6.2
@@ -16,7 +16,7 @@ if(!defined('ABSPATH')) exit;
 
 define('WOO_GPPDIR', plugin_dir_path( __FILE__ ));
 define('WOO_GPPDU', plugin_dir_url( __FILE__ ));
-define('WOO_PAYPING_VERSION', '4.6.4');
+define('WOO_PAYPING_VERSION', '4.6.5');
 
 function load_payping_woo_gateway(){
 
@@ -55,6 +55,9 @@ function load_payping_woo_gateway(){
 		return $currency_symbol;
 	}
 	require_once( WOO_GPPDIR . 'class-wc-gateway-payping.php' );
+	require_once( WOO_GPPDIR . 'class-order-panel.php' );
+
+	Payping_Order_Panel::init();
 }
 add_action('plugins_loaded', 'load_payping_woo_gateway', 0);
 
