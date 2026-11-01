@@ -19,6 +19,8 @@ class Payping_Order_Panel {
     public static function init() {
         if ( is_admin() ) {
             add_action( 'add_meta_boxes', array( __CLASS__, 'register_meta_box' ) );
+            add_action( 'admin_post_woo_payping_reverify', array( __CLASS__, 'handle_reverify' ) );
+            add_action( 'admin_notices', array( __CLASS__, 'print_reverify_notice' ) );
         }
     }
 
@@ -90,22 +92,166 @@ class Payping_Order_Panel {
                     ?>
                     <li>
                         <span class="label"><?php echo esc_html( $row['label'] ); ?></span>
-                        <span class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"><?php echo esc_html( $row['value'] ); ?></span>
+                        <span class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
+                            <?php echo esc_html( $row['value'] ); ?>
+                            <?php if ( ! empty( $row['copy'] ) ) : ?>
+                                <button type="button" class="button button-small payping-copy" data-copy="<?php echo esc_attr( $row['value'] ); ?>">کپی</button>
+                            <?php endif; ?>
+                        </span>
                     </li>
                 <?php endforeach; ?>
             </ul>
+            <?php self::render_reverify_section( $order ); ?>
             <?php if ( $events ) : ?>
                 <div class="payping-section-title">رویدادها</div>
                 <ul class="payping-events">
                     <?php foreach ( array_reverse( $events ) as $event ) : ?>
                         <li class="payping-ev-<?php echo esc_attr( $event['type'] ); ?>">
-                            <span class="payping-ev-time"><?php echo esc_html( self::format_time( (int) $event['time'] ) ); ?></span>
+                            <span class="payping-ev-time">
+                                <?php echo esc_html( self::format_time( (int) $event['time'] ) ); ?>
+                                <span class="payping-ev-badge"><?php echo esc_html( self::event_badge_label( $event['type'] ) ); ?></span>
+                            </span>
                             <span class="payping-ev-text"><?php echo esc_html( $event['message'] ); ?></span>
                         </li>
                     <?php endforeach; ?>
                 </ul>
             <?php endif; ?>
         </div>
+        <?php
+        self::print_scripts();
+    }
+
+    /**
+     * Short Persian labels for the event timeline badges.
+     */
+    private static function event_badge_label( $type ) {
+        $labels = array(
+            'created'    => 'ثبت',
+            'verified'   => 'تأیید',
+            'duplicate'  => 'تکراری',
+            'failed'     => 'ناموفق',
+            'error'      => 'خطا',
+            'cancelled'  => 'انصراف',
+            'invalidated' => 'ابطال',
+        );
+
+        return isset( $labels[ $type ] ) ? $labels[ $type ] : $type;
+    }
+
+    /**
+     * The re-check button for unpaid orders whose return trip from the
+     * gateway was lost or failed. Needs both the payment code and the
+     * reference id the gateway handed back.
+     */
+    private static function render_reverify_section( $order ) {
+        if ( $order->is_paid() || 'WC_payping' !== $order->get_payment_method() ) {
+            return;
+        }
+
+        $pay_code = $order->get_meta( '_payping_payCode' );
+        if ( ! $pay_code ) {
+            return;
+        }
+
+        $refid = $order->get_meta( '_payping_refid' );
+        if ( ! $refid ) {
+            echo '<p class="payping-reverify-hint">کد پیگیری درگاه برای این پرداخت ثبت نشده و استعلام مجدد ممکن نیست.</p>';
+            return;
+        }
+
+        $url = wp_nonce_url(
+            admin_url( 'admin-post.php?action=woo_payping_reverify&order=' . $order->get_id() ),
+            'woo_payping_reverify_' . $order->get_id()
+        );
+
+        echo '<p class="payping-reverify"><a href="' . esc_url( $url ) . '" class="button">استعلام مجدد پرداخت</a></p>';
+    }
+
+    /**
+     * admin-post handler behind the re-check button.
+     */
+    public static function handle_reverify() {
+        $order_id = isset( $_GET['order'] ) ? absint( $_GET['order'] ) : 0;
+        check_admin_referer( 'woo_payping_reverify_' . $order_id );
+
+        if ( ! current_user_can( 'edit_shop_orders' ) && ! current_user_can( 'manage_woocommerce' ) ) {
+            wp_die( 'شما اجازه انجام این عملیات را ندارید.' );
+        }
+
+        $order = $order_id ? wc_get_order( $order_id ) : false;
+        if ( ! $order || ! is_a( $order, 'WC_Order' ) || 'WC_payping' !== $order->get_payment_method() ) {
+            wp_die( 'سفارش نامعتبر است.' );
+        }
+
+        $gateways = WC()->payment_gateways()->payment_gateways();
+        if ( ! isset( $gateways['WC_payping'] ) ) {
+            wp_die( 'درگاه پی‌پینگ در دسترس نیست.' );
+        }
+
+        $outcome = $gateways['WC_payping']->process_reverify( $order );
+
+        wp_safe_redirect( add_query_arg(
+            array(
+                'payping_reverify' => $outcome['success'] ? 'ok' : 'fail',
+                'payping_msg'      => rawurlencode( $outcome['message'] ),
+            ),
+            $order->get_edit_order_url()
+        ) );
+        exit;
+    }
+
+    /**
+     * Result banner the admin lands on after the re-check.
+     */
+    public static function print_reverify_notice() {
+        if ( empty( $_GET['payping_reverify'] ) || empty( $_GET['payping_msg'] ) ) {
+            return;
+        }
+
+        $ok      = 'ok' === sanitize_text_field( wp_unslash( $_GET['payping_reverify'] ) );
+        $message = sanitize_text_field( rawurldecode( wp_unslash( $_GET['payping_msg'] ) ) );
+
+        echo '<div class="notice notice-' . ( $ok ? 'success' : 'error' ) . ' is-dismissible"><p>' . esc_html( $message ) . '</p></div>';
+    }
+
+    private static function print_scripts() {
+        static $printed = false;
+        if ( $printed ) {
+            return;
+        }
+        $printed = true;
+        ?>
+        <script>
+            (function () {
+                var panel = document.querySelector('.payping-order-panel');
+                if (!panel) {
+                    return;
+                }
+                panel.addEventListener('click', function (event) {
+                    var button = event.target.closest('.payping-copy');
+                    if (!button) {
+                        return;
+                    }
+                    var text = button.getAttribute('data-copy');
+                    var done = function () {
+                        var original = button.textContent;
+                        button.textContent = 'کپی شد';
+                        setTimeout(function () { button.textContent = original; }, 1200);
+                    };
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(text).then(done);
+                    } else {
+                        var input = document.createElement('textarea');
+                        input.value = text;
+                        document.body.appendChild(input);
+                        input.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(input);
+                        done();
+                    }
+                });
+            })();
+        </script>
         <?php
     }
 
@@ -118,7 +264,7 @@ class Payping_Order_Panel {
 
         $pay_code = $order->get_meta( '_payping_payCode' );
         if ( $pay_code ) {
-            $rows[] = array( 'label' => 'کد پرداخت', 'value' => $pay_code, 'ltr' => true );
+            $rows[] = array( 'label' => 'کد پرداخت', 'value' => $pay_code, 'ltr' => true, 'copy' => true );
         }
 
         $amount = $order->get_meta( '_payping_amount' );
@@ -128,12 +274,12 @@ class Payping_Order_Panel {
 
         $transaction_id = $order->get_transaction_id();
         if ( $transaction_id ) {
-            $rows[] = array( 'label' => 'شماره تراکنش', 'value' => $transaction_id, 'ltr' => true );
+            $rows[] = array( 'label' => 'شماره تراکنش', 'value' => $transaction_id, 'ltr' => true, 'copy' => true );
         }
 
         $card_number = $order->get_meta( 'payping_payment_card_number' );
         if ( $card_number && '-' !== $card_number ) {
-            $rows[] = array( 'label' => 'شماره کارت', 'value' => $card_number, 'ltr' => true );
+            $rows[] = array( 'label' => 'شماره کارت', 'value' => self::format_card_number( $card_number ), 'ltr' => true );
         }
 
         $last_error = $order->get_meta( self::LAST_ERROR_META );
@@ -141,7 +287,7 @@ class Payping_Order_Panel {
             $rows[] = array( 'label' => 'آخرین خطا', 'value' => $last_error['message'] );
 
             if ( ! empty( $last_error['trace_id'] ) ) {
-                $rows[] = array( 'label' => 'Trace ID', 'value' => $last_error['trace_id'], 'ltr' => true );
+                $rows[] = array( 'label' => 'Trace ID', 'value' => $last_error['trace_id'], 'ltr' => true, 'copy' => true );
             }
         }
 
@@ -151,6 +297,20 @@ class Payping_Order_Panel {
         }
 
         return apply_filters( 'woo_payping_order_panel_rows', $rows, $order );
+    }
+
+    /**
+     * Show card numbers from the gateway in readable groups. Masked values
+     * (containing stars) already carry their own separators.
+     */
+    private static function format_card_number( $card_number ) {
+        $card_number = (string) $card_number;
+
+        if ( false === strpos( $card_number, '*' ) && preg_match( '/^\d{12,19}$/', $card_number ) ) {
+            return trim( chunk_split( $card_number, 4, '-' ), '-' );
+        }
+
+        return $card_number;
     }
 
     /**
@@ -225,6 +385,16 @@ class Payping_Order_Panel {
             .payping-order-panel .payping-events li.payping-ev-cancelled::before { background: #dba617; }
             .payping-order-panel .payping-ev-time { display: block; margin-bottom: 2px; font-size: 11px; color: #8c8f94; }
             .payping-order-panel .payping-ev-text { display: block; }
+            .payping-order-panel .payping-ev-badge { display: inline-block; margin-right: 6px; padding: 0 6px; border-radius: 3px; font-size: 10px; line-height: 16px; background: #f0f0f1; color: #50575e; }
+            .payping-order-panel li.payping-ev-verified .payping-ev-badge,
+            .payping-order-panel li.payping-ev-duplicate .payping-ev-badge { background: #edfaef; color: #00a32a; }
+            .payping-order-panel li.payping-ev-error .payping-ev-badge,
+            .payping-order-panel li.payping-ev-failed .payping-ev-badge { background: #fcf0f1; color: #d63638; }
+            .payping-order-panel li.payping-ev-cancelled .payping-ev-badge { background: #fcf9e8; color: #996800; }
+            .payping-order-panel .payping-copy { margin-right: 6px; padding: 0 6px; line-height: 20px; height: 20px; font-size: 10px; vertical-align: middle; cursor: pointer; }
+            .payping-order-panel .payping-reverify { margin: 10px 0 0; }
+            .payping-order-panel .payping-reverify .button { width: 100%; text-align: center; justify-content: center; }
+            .payping-order-panel .payping-reverify-hint { margin: 10px 0 0; font-size: 11px; color: #8c8f94; }
         </style>
         <?php
     }

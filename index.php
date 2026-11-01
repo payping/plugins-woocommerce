@@ -1,7 +1,7 @@
 <?php
 /*
 * Plugin Name: PayPing Gateway For Woocommerce
-* Version: 4.6.5
+* Version: 4.7.0
 * Description:  افزونه درگاه پرداخت پی‌پینگ برای ووکامرس
 * Plugin URI: https://github.com/payping/plugins-woocommerce/
 * Requires at least: 6.2
@@ -16,7 +16,7 @@ if(!defined('ABSPATH')) exit;
 
 define('WOO_GPPDIR', plugin_dir_path( __FILE__ ));
 define('WOO_GPPDU', plugin_dir_url( __FILE__ ));
-define('WOO_PAYPING_VERSION', '4.6.5');
+define('WOO_PAYPING_VERSION', '4.7.0');
 
 function load_payping_woo_gateway(){
 
@@ -26,34 +26,39 @@ function load_payping_woo_gateway(){
 		$methods[] = 'WC_payping';
 		return $methods;
 	}
-	/* Add Iranian Currencies Woocommerce */
+	/* Add Iranian Currencies Woocommerce, without touching entries
+	   another plugin (ParsiGate, currency plugins, ...) already added */
 	add_filter('woocommerce_currencies', 'add_IR_currency_For_PayPing');
 	function add_IR_currency_For_PayPing($currencies){
-		$currencies['IRR'] = __('ریال', 'woo-payping-gateway');
-		$currencies['IRT'] = __('تومان', 'woo-payping-gateway');
-		$currencies['IRHR'] = __('هزار ریال', 'woo-payping-gateway');
-		$currencies['IRHT'] = __('هزار تومان', 'woo-payping-gateway');
+		$ir_currencies = array(
+			'IRR' => __('ریال', 'woo-payping-gateway'),
+			'IRT' => __('تومان', 'woo-payping-gateway'),
+			'IRHR' => __('هزار ریال', 'woo-payping-gateway'),
+			'IRHT' => __('هزار تومان', 'woo-payping-gateway'),
+		);
+		foreach ($ir_currencies as $code => $label) {
+			if (!isset($currencies[$code])) {
+				$currencies[$code] = $label;
+			}
+		}
 		return $currencies;
 	}
-	/* Add Iranian Currencies Symbols Woocommerce */
+	/* Add Iranian Currencies Symbols Woocommerce, but keep a symbol
+	   another plugin already set (Woo's own fallback is the code itself) */
 	add_filter('woocommerce_currency_symbol', 'add_IR_currency_symbol_For_PayPing', 10, 2);
 	function add_IR_currency_symbol_For_PayPing($currency_symbol, $currency){
-		switch ($currency) {
-			case 'IRR':
-				$currency_symbol = 'ریال';
-				break;
-			case 'IRT':
-				$currency_symbol = 'تومان';
-				break;
-			case 'IRHR':
-				$currency_symbol = 'هزار ریال';
-				break;
-			case 'IRHT':
-				$currency_symbol = 'هزار تومان';
-				break;
+		$ir_symbols = array(
+			'IRR' => 'ریال',
+			'IRT' => 'تومان',
+			'IRHR' => 'هزار ریال',
+			'IRHT' => 'هزار تومان',
+		);
+		if (isset($ir_symbols[$currency]) && $currency_symbol === $currency) {
+			$currency_symbol = $ir_symbols[$currency];
 		}
 		return $currency_symbol;
 	}
+	require_once( WOO_GPPDIR . 'src/class-payping-api.php' );
 	require_once( WOO_GPPDIR . 'class-wc-gateway-payping.php' );
 	require_once( WOO_GPPDIR . 'class-order-panel.php' );
 

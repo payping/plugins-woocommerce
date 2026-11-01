@@ -87,7 +87,7 @@ if ( class_exists( 'WC_Payment_Gateway' ) && ! class_exists( 'WC_payping' ) ) {
                 ),
                 'paypingToken' => array(
                     'title'       => __( 'توکن', 'woo-payping-gateway' ),
-                    'type'        => 'text',
+                    'type'        => 'password',
                     'description' => __( 'توکن درگاه پی‌پینگ', 'woo-payping-gateway' ),
                     'default'     => '',
                     'desc_tip'    => true
@@ -249,88 +249,37 @@ if ( class_exists( 'WC_Payment_Gateway' ) && ! class_exists( 'WC_payping' ) ) {
 
             $api_url  = apply_filters( 'WC_payping_Gateway_Payment_api_url', $this->baseurl . '/pay', $order_id );
             $api_args = apply_filters( 'WC_payping_Gateway_Payment_api_args', $args, $order_id );
-            $response = wp_safe_remote_post( $api_url, $api_args );
-        
-            $ERR_ID  = wp_remote_retrieve_header( $response, 'x-paypingrequest-id' );
-            $Message = '';
-        
-            if ( is_wp_error( $response ) ) {
-                $Message = $response->get_error_message();
-            } else {
-                $code = wp_remote_retrieve_response_code( $response );
-                $body = wp_remote_retrieve_body( $response );
-        
-                if ( 200 === $code && ! empty( $body ) ) {
-                    $code_pay = json_decode( $body, true );
-                    if ( isset( $code_pay['paymentCode'] ) ) {
-                        $order->update_meta_data( '_payping_payCode', $code_pay['paymentCode'] );
-                        $order->update_meta_data( '_payping_amount', $Amount );
-                        $order->save();
 
-                        Payping_Order_Panel::log_event( $order, 'created', 'ساخت موفق پرداخت، کد پرداخت: ' . $code_pay['paymentCode'] );
+            $api     = new WooPayping\Payping_Api();
+            $result  = $api->create_payment( $api_url, $api_args );
 
-                        return sprintf( '%s/pay/start/%s', $this->baseurl, $code_pay['paymentCode'] );
-                    }
-                }
-                
-                $Message = ( 200 !== $code )
-                    ? $this->get_api_error_message( $body, $code )
-                    : __( 'تراکنش ناموفق بود', 'woo-payping-gateway' );
+            if ( $result->ok ) {
+                $payment_code = $result->get( 'payment_code' );
+
+                $order->update_meta_data( '_payping_payCode', $payment_code );
+                $order->update_meta_data( '_payping_amount', $Amount );
+                $order->save();
+
+                Payping_Order_Panel::log_event( $order, 'created', 'ساخت موفق پرداخت، کد پرداخت: ' . $payment_code );
+
+                return sprintf( '%s/pay/start/%s', $this->baseurl, $payment_code );
             }
 
+            $Message = $result->message;
+
+            $ERR_ID = $result->get( 'request_id' );
             if ( $ERR_ID ) {
-                $Message .= ' | ' . __( 'شناسه درخواست', 'woo-payping-gateway' ) . ': ' . sanitize_text_field( $ERR_ID );
+                $Message .= ' | ' . __( 'شناسه درخواست', 'woo-payping-gateway' ) . ': ' . $ERR_ID;
             }
 
             // Keep the trace id from the error body for the order panel.
-            $response_data = isset( $body ) ? json_decode( (string) $body, true ) : [];
             $error_details = [];
-            if ( isset( $response_data['paypingTraceId'] ) ) {
-                $error_details['trace_id'] = sanitize_text_field( (string) $response_data['paypingTraceId'] );
+            $trace_id      = $result->get( 'trace_id' );
+            if ( $trace_id ) {
+                $error_details['trace_id'] = $trace_id;
             }
 
             return new WP_Error( 'payping_send_to_gateway', $Message, $error_details );
-        }
-
-        /**
-         * Human readable message for a failed PayPing API response.
-         *
-         * PayPing replies with RFC 7807 problem+json errors where the
-         * description for the merchant sits in metaData.errors. Unknown
-         * payloads fall back to the raw body, or a generic message when
-         * the body is empty or too long to be useful.
-         */
-        private function get_api_error_message( $body, $status_code ) {
-            $data     = json_decode( (string) $body, true );
-            $messages = [];
-
-            if ( is_array( $data ) ) {
-                foreach ( $data['metaData']['errors'] ?? [] as $error ) {
-                    if ( ! empty( $error['message'] ) ) {
-                        $messages[] = sanitize_text_field( $error['message'] );
-                    }
-                }
-
-                if ( ! $messages && ! empty( $data['detail'] ) ) {
-                    $messages[] = sanitize_text_field( $data['detail'] );
-                }
-            }
-
-            if ( ! $messages ) {
-                $raw = trim( wp_strip_all_tags( (string) $body ) );
-                $messages[] = ( '' !== $raw && mb_strlen( $raw ) <= 200 )
-                    ? $raw
-                    : sprintf( __( 'خطای نامشخص در ارتباط با درگاه پی‌پینگ (کد %s)', 'woo-payping-gateway' ), $status_code );
-            }
-
-            $message = implode( ' | ', $messages );
-
-            $error_code = (int) ( $data['metaData']['code'] ?? 0 );
-            if ( $error_code ) {
-                $message .= ' | ' . __( 'کد خطا', 'woo-payping-gateway' ) . ': ' . $error_code;
-            }
-
-            return $message;
         }
 
         private function record_send_failure( $order, $error ) {
@@ -369,6 +318,7 @@ if ( class_exists( 'WC_Payment_Gateway' ) && ! class_exists( 'WC_payping' ) ) {
 
             $order->delete_meta_data( '_payping_payCode' );
             $order->delete_meta_data( '_payping_amount' );
+            $order->delete_meta_data( '_payping_refid' );
             $order->save();
 
             $message = 'کد پرداخت این سفارش در ووکامرس باطل شد';
@@ -383,6 +333,16 @@ if ( class_exists( 'WC_Payment_Gateway' ) && ! class_exists( 'WC_payping' ) ) {
 
             $paypingResponse = isset( $_REQUEST['data'] ) ? wp_unslash( $_REQUEST['data'] ) : '';
             $responseData    = json_decode( $paypingResponse, true ) ?: [];
+
+            // Some PayPing posts arrive as a raw JSON body instead of the
+            // form-encoded "data" parameter; accept both shapes.
+            $request_method = isset( $_SERVER['REQUEST_METHOD'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) : '';
+            if ( empty( $responseData ) && 'POST' === $request_method ) {
+                $raw_body = file_get_contents( 'php://input' );
+                if ( is_string( $raw_body ) && '' !== trim( $raw_body ) ) {
+                    $responseData = json_decode( $raw_body, true ) ?: [];
+                }
+            }
 
             if ( isset( $_REQUEST['wc_order'] ) ) {
                 $order_id = absint( $_REQUEST['wc_order'] );
@@ -416,6 +376,13 @@ if ( class_exists( 'WC_Payment_Gateway' ) && ! class_exists( 'WC_payping' ) ) {
             $expectedRefId = $this->get_client_ref_id( $order );
             $refid         = isset( $responseData['paymentRefId'] ) ? sanitize_text_field( $responseData['paymentRefId'] ) : null;
             $Transaction_ID = apply_filters( 'WC_payping_return_refid', $refid );
+
+            // Keep the gateway reference id on the order even when the
+            // verify call fails; it is what the admin re-check uses.
+            if ( $Transaction_ID ) {
+                $order->update_meta_data( '_payping_refid', $Transaction_ID );
+                $order->save();
+            }
 
             if ( '' === $clientRefId || $clientRefId !== $expectedRefId ) {
                 $error_message = sprintf( 'شناسه سفارش برگشتی (%s) با شناسه سفارش اصلی (%s) مطابقت ندارد', $clientRefId ?: 'ندارد', $expectedRefId );
@@ -477,6 +444,17 @@ if ( class_exists( 'WC_Payment_Gateway' ) && ! class_exists( 'WC_payping' ) ) {
 
         private function verify_payment( $order, $Transaction_ID, $responseData ) {
             $order_id = $order->get_id();
+
+            // Two browser tabs (or PayPing retries) can hit the callback at
+            // the same time; hold a short lock so the order is only completed
+            // once. Stale locks expire on their own.
+            $lock_key = 'woo_payping_verify_' . $order_id;
+            if ( get_transient( $lock_key ) ) {
+                wp_redirect( $this->get_return_url( $order ) );
+                exit;
+            }
+            set_transient( $lock_key, 1, 2 * MINUTE_IN_SECONDS );
+
             $stored_payment_code = $order->get_meta( '_payping_payCode' );
 
             // Amount must match what was sent to PayPing
@@ -499,45 +477,47 @@ if ( class_exists( 'WC_Payment_Gateway' ) && ! class_exists( 'WC_payping' ) ) {
             ];
 
             $verify_api_url = apply_filters( 'WC_payping_Gateway_Payment_verify_api_url', $this->baseurl . '/pay/verify', $order_id );
-            $response = wp_safe_remote_post( $verify_api_url, $args );
-            $body     = wp_remote_retrieve_body( $response );
-            $rbody    = json_decode( $body, true ) ?: [];
 
-            if ( is_wp_error( $response ) ) {
-                $this->handle_verification_error( $order, $Transaction_ID, 'خطا در ارتباط به پی‌پینگ: ' . $response->get_error_message() );
+            $api    = new WooPayping\Payping_Api();
+            $result = $api->verify_payment( $verify_api_url, $args );
+
+            if ( 0 === $result->status_code && ! $result->ok ) {
+                $this->release_verify_lock( $order_id );
+                $this->handle_verification_error( $order, $Transaction_ID, 'خطا در ارتباط به پی‌پینگ: ' . $result->message );
                 return;
             }
 
-            $code = wp_remote_retrieve_response_code( $response );
+            $code = $result->status_code;
+            $rbody = $result->get( 'body' );
+
+            // 409/110 means this payment was already verified before.
+            if ( $result->duplicate ) {
+                $this->handle_duplicate_payment( $order, $Transaction_ID );
+                return;
+            }
 
             if ( 200 !== $code && isset( $rbody['status'], $rbody['metaData']['code'] ) ) {
-                $error_code = (int) $rbody['metaData']['code'];
-                $trace_id   = isset( $rbody['paypingTraceId'] ) ? sanitize_text_field( (string) $rbody['paypingTraceId'] ) : '';
-
-                // 409/110 means this payment was already verified before.
-                if ( 409 === (int) $rbody['status'] && 110 === $error_code ) {
-                    $this->handle_duplicate_payment( $order, $Transaction_ID );
-                    return;
-                }
-
-                $this->handle_payment_failure( $order, $Transaction_ID, $this->get_api_error_message( $body, $code ), $trace_id );
+                $this->release_verify_lock( $order_id );
+                $this->handle_payment_failure( $order, $Transaction_ID, $result->message, $result->get( 'trace_id' ) );
                 return;
             }
 
             if ( ! isset( $rbody['code'] ) || $rbody['code'] !== $stored_payment_code ) {
+                $this->release_verify_lock( $order_id );
                 $this->handle_verification_error( $order, $Transaction_ID, 'کد پرداخت برگشتی با کد ذخیره شده مطابقت ندارد' );
                 return;
             }
 
             $response_amount = isset( $rbody['amount'] ) ? intval( $rbody['amount'] ) : 0;
             if ( $response_amount !== $expected_amount ) {
+                $this->release_verify_lock( $order_id );
                 $this->handle_verification_error( $order, $Transaction_ID, sprintf( 'مبلغ پرداختی (%s) با مبلغ سفارش (%s) مطابقت ندارد', number_format( $response_amount ), number_format( $expected_amount ) ) );
                 return;
             }
 
             $cardNumber  = isset( $rbody['cardNumber'] ) ? sanitize_text_field( $rbody['cardNumber'] ) : '-';
             $CardHashPan = isset( $rbody['cardHashPan'] ) ? sanitize_text_field( $rbody['cardHashPan'] ) : '-';
-            
+
             $order->update_meta_data( 'payping_payment_card_number', $cardNumber );
             $order->update_meta_data( 'payping_payment_card_hashpan', $CardHashPan );
             $order->save();
@@ -545,8 +525,137 @@ if ( class_exists( 'WC_Payment_Gateway' ) && ! class_exists( 'WC_payping' ) ) {
             if ( 200 === $code ) {
                 $this->handle_payment_success( $order, $Transaction_ID, $cardNumber, $this->status_message( $code ) );
             } else {
+                $this->release_verify_lock( $order_id );
                 $this->handle_verification_error( $order, $Transaction_ID, $this->status_message( $code ) ?: 'خطای نامشخص در تایید پرداخت!' );
             }
+        }
+
+        // Drop the verify lock of an order after a failed verification, so
+        // the buyer can immediately try again. Successful and duplicate
+        // payments keep the lock; the is_paid() check on entry covers them.
+        private function release_verify_lock( $order_id ) {
+            delete_transient( 'woo_payping_verify_' . $order_id );
+        }
+
+        /**
+         * Re-run the verification of an unpaid order from the admin panel.
+         *
+         * Used when the buyer paid at the bank but the return trip was lost
+         * or the verify call failed. Requires the stored payment code and
+         * the reference id the gateway returned. Changes order state and
+         * logs events, but never redirects: the caller decides where the
+         * admin lands afterwards.
+         *
+         * @return array outcome: array( 'success' => bool, 'message' => string )
+         */
+        public function process_reverify( $order ) {
+            $order_id = $order->get_id();
+
+            if ( $order->is_paid() ) {
+                return array( 'success' => true, 'message' => 'این سفارش از قبل پرداخت شده است.' );
+            }
+
+            $payment_code = $order->get_meta( '_payping_payCode' );
+            $refid        = $order->get_meta( '_payping_refid' );
+
+            if ( ! $payment_code || ! $refid ) {
+                return array( 'success' => false, 'message' => 'کد پرداخت یا کد پیگیری درگاه برای استعلام موجود نیست.' );
+            }
+
+            $lock_key = 'woo_payping_verify_' . $order_id;
+            if ( get_transient( $lock_key ) ) {
+                return array( 'success' => false, 'message' => 'یک بررسی دیگر برای این سفارش در جریان است؛ چند لحظه بعد دوباره تلاش کنید.' );
+            }
+            set_transient( $lock_key, 1, 2 * MINUTE_IN_SECONDS );
+
+            $expected_amount = $this->get_expected_amount( $order );
+
+            $args = [
+                'body'    => wp_json_encode( [
+                    'PaymentRefId' => $refid,
+                    'PaymentCode'  => $payment_code,
+                    'Amount'       => $expected_amount
+                ] ),
+                'timeout' => 45,
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->paypingToken,
+                    'Content-Type'  => 'application/json',
+                    'Accept'        => 'application/json'
+                ]
+            ];
+
+            $api    = new WooPayping\Payping_Api();
+            $result = $api->verify_payment(
+                apply_filters( 'WC_payping_Gateway_Payment_verify_api_url', $this->baseurl . '/pay/verify', $order_id ),
+                $args
+            );
+
+            // Transport failure: nothing definitive, let the admin retry.
+            if ( 0 === $result->status_code && ! $result->ok ) {
+                $this->release_verify_lock( $order_id );
+                return array( 'success' => false, 'message' => 'خطا در ارتباط به پی‌پینگ: ' . $result->message );
+            }
+
+            if ( $result->duplicate ) {
+                $this->reverify_complete( $order, $refid, 'این سفارش قبلا تایید شده است.', 'duplicate' );
+                return array( 'success' => true, 'message' => 'این پرداخت قبلاً تأیید شده بود و سفارش تکمیل شد.' );
+            }
+
+            if ( $result->ok ) {
+                $rbody = $result->get( 'body' );
+
+                if ( ! isset( $rbody['code'] ) || $rbody['code'] !== $payment_code ) {
+                    $this->release_verify_lock( $order_id );
+                    Payping_Order_Panel::log_event( $order, 'error', 'خطا در استعلام مجدد: کد پرداخت پاسخ درگاه با کد ذخیره شده مطابقت ندارد' );
+                    return array( 'success' => false, 'message' => 'کد پرداخت پاسخ درگاه با کد ذخیره شده مطابقت ندارد.' );
+                }
+
+                $response_amount = isset( $rbody['amount'] ) ? intval( $rbody['amount'] ) : 0;
+                if ( $response_amount !== $expected_amount ) {
+                    $this->release_verify_lock( $order_id );
+                    Payping_Order_Panel::log_event( $order, 'error', sprintf( 'خطا در استعلام مجدد: مبلغ پرداختی (%s) با مبلغ سفارش (%s) مطابقت ندارد', number_format( $response_amount ), number_format( $expected_amount ) ) );
+                    return array( 'success' => false, 'message' => sprintf( 'مبلغ پرداختی (%s) با مبلغ سفارش (%s) مطابقت ندارد', number_format( $response_amount ), number_format( $expected_amount ) ) );
+                }
+
+                $cardNumber  = isset( $rbody['cardNumber'] ) ? sanitize_text_field( $rbody['cardNumber'] ) : '-';
+                $CardHashPan = isset( $rbody['cardHashPan'] ) ? sanitize_text_field( $rbody['cardHashPan'] ) : '-';
+
+                $order->update_meta_data( 'payping_payment_card_number', $cardNumber );
+                $order->update_meta_data( 'payping_payment_card_hashpan', $CardHashPan );
+                $order->save();
+
+                $this->reverify_complete( $order, $refid, 'پرداخت این سفارش در استعلام مجدد تایید شد. شماره کارت: ' . $cardNumber, 'verified' );
+
+                return array( 'success' => true, 'message' => 'پرداخت با موفقیت تأیید و سفارش تکمیل شد.' );
+            }
+
+            $this->release_verify_lock( $order_id );
+
+            Payping_Order_Panel::log_event( $order, 'error', 'خطا در استعلام مجدد: ' . $result->message, array( 'trace_id' => $result->get( 'trace_id' ) ) );
+
+            return array( 'success' => false, 'message' => 'استعلام ناموفق بود: ' . $result->message );
+        }
+
+        /**
+         * Complete an order from the admin re-check. Kept apart from the
+         * front-end success handler: no cart and no wc notices exist on
+         * admin requests.
+         */
+        private function reverify_complete( $order, $refid, $log_message, $event_type ) {
+            $order->update_meta_data( '_transaction_id', $refid );
+            $order->save();
+
+            Payping_Order_Panel::log_event( $order, $event_type, $log_message );
+
+            $order->payment_complete( $refid );
+
+            /**
+             * Fires after a payment is confirmed by the admin re-check.
+             *
+             * @param int $order_id Order id.
+             * @param string $refid PayPing reference id.
+             */
+            do_action( 'woo_payping_Admin_Reverified', $order->get_id(), $refid );
         }
 
         // ClientRefId sent to PayPing for this order.
